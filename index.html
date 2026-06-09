@@ -918,19 +918,19 @@ function updateUI() {
   updateBoostUI();
 
   // Ref link
-  const refLink=`https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
+  const refLink=`https://t.me/pakChainBot/pakChainMiner?start=ref_${userId}`;
   document.getElementById('refLinkText').textContent=refLink;
 }
 
 // ============ REFERRAL FUNCTIONS ============
 function copyRefLink() {
-  const refLink=`https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
+  const refLink=`https://t.me/pakChainBot/pakChainMiner?start=ref_${userId}`;
   navigator.clipboard?.writeText(refLink).then(()=>showToast('📋 Link copied!')).catch(()=>{});
   if(window.Telegram?.WebApp) Telegram.WebApp.HapticFeedback?.notificationOccurred('success');
 }
 
 function shareRefLink() {
-  const refLink=`https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
+  const refLink=`https://t.me/pakChainBot/pakChainMiner?start=ref_${userId}`;
   const text=`⛏️ PakChain Miner — Mine PKC coins daily!\n\n💎 Join with my link and get +50 PTS bonus:\n${refLink}\n\n🚀 Mainnet launch soon — mine as much as you can!`;
   if(window.Telegram?.WebApp) {
     Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(text)}`);
