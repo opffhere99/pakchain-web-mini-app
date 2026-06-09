@@ -918,13 +918,13 @@ function updateUI() {
   updateBoostUI();
 
   // Ref link
-  const refLink=`https://t.me/pakChainBot/pakChainMiner?start=ref_${userId}`;
+  const refLink=`https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
   document.getElementById('refLinkText').textContent=refLink;
 }
 
 // ============ REFERRAL FUNCTIONS ============
 function copyRefLink() {
-  const refLink=`https://t.me/pakChainBot/pakChainMiner?start=ref_${userId}`;
+  const refLink=`https://t.me/${BOT_USERNAME?start=ref_${userId}`;
   navigator.clipboard?.writeText(refLink).then(()=>showToast('📋 Link copied!')).catch(()=>{});
   if(window.Telegram?.WebApp) Telegram.WebApp.HapticFeedback?.notificationOccurred('success');
 }
