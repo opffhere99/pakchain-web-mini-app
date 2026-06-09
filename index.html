@@ -1,103 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<metacharset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PakChain Miner</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
-:root{--cyan:#00ffe0;--pink:#ff00aa;--dark:#020408;--dark2:#0a0f14;--text:#c8e8e0;--gold:#ffd700;}
+:root{
+  --cyan:#00ffe0;--pink:#ff00aa;--dark:#020408;--dark2:#0a0f14;
+  --text:#c8e8e0;--gold:#ffd700;--purple:#a855f7;--orange:#ff6b00;
+}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
 body{background:var(--dark);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
 .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(0,255,200,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,200,0.02) 1px,transparent 1px);background-size:40px 40px;}
 .scanlines{position:fixed;inset:0;z-index:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);}
 .page{position:absolute;inset:0;display:flex;flex-direction:column;transition:opacity 0.2s;z-index:1;}
 .page.hidden{opacity:0;pointer-events:none;}
-.header{padding:14px 20px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(0,255,224,0.08);background:rgba(2,4,8,0.9);backdrop-filter:blur(10px);flex-shrink:0;}
-.header-logo{font-family:'Orbitron',monospace;font-weight:900;font-size:16px;color:var(--cyan);letter-spacing:3px;text-shadow:0 0 12px var(--cyan);}
+.header{padding:12px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(0,255,224,0.08);background:rgba(2,4,8,0.95);backdrop-filter:blur(10px);flex-shrink:0;}
+.header-logo{font-family:'Orbitron',monospace;font-weight:900;font-size:15px;color:var(--cyan);letter-spacing:2px;text-shadow:0 0 10px var(--cyan);}
 .header-logo span{color:#fff;}
 .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:1px;}
-.header-level{font-family:'Orbitron',monospace;font-size:12px;color:var(--pink);}
+.header-level{font-family:'Orbitron',monospace;font-size:11px;}
 .header-username{font-size:10px;color:rgba(200,232,224,0.4);letter-spacing:1px;}
-.scroll-content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:70px;}
+.scroll-content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:72px;}
 .scroll-content::-webkit-scrollbar{width:0;}
-.balance-card{margin:14px 16px 10px;background:linear-gradient(135deg,rgba(0,255,224,0.05),rgba(13,26,20,0.8));border:1px solid rgba(0,255,224,0.15);border-radius:16px;padding:20px;text-align:center;}
-.balance-label{font-size:9px;color:rgba(200,232,224,0.35);letter-spacing:4px;margin-bottom:6px;}
-.balance-points{font-family:'Orbitron',monospace;font-weight:900;font-size:40px;color:var(--gold);text-shadow:0 0 30px rgba(255,215,0,0.4);letter-spacing:1px;}
-.balance-unit{font-size:12px;color:rgba(255,215,0,0.5);letter-spacing:4px;margin-top:4px;}
-.balance-note{font-size:10px;color:rgba(200,232,224,0.3);margin-top:8px;letter-spacing:1px;}
-.energy-wrap{padding:0 16px 10px;}
-.energy-top{display:flex;justify-content:space-between;margin-bottom:6px;}
-.energy-label{font-size:9px;color:rgba(200,232,224,0.35);letter-spacing:2px;}
+
+/* BALANCE CARD */
+.balance-card{margin:12px 14px 8px;background:rgba(0,255,224,0.03);border:1px solid rgba(0,255,224,0.12);border-radius:14px;padding:16px;text-align:center;}
+.balance-label{font-size:9px;color:rgba(200,232,224,0.3);letter-spacing:3px;margin-bottom:4px;}
+.balance-points{font-family:'Orbitron',monospace;font-weight:900;font-size:36px;color:var(--gold);text-shadow:0 0 20px rgba(255,215,0,0.3);letter-spacing:1px;}
+.balance-unit{font-size:11px;color:rgba(255,215,0,0.45);letter-spacing:3px;margin-top:2px;}
+.balance-note{font-size:9px;color:rgba(200,232,224,0.25);margin-top:6px;letter-spacing:1px;}
+
+/* RANK BADGE */
+.rank-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:2px;margin-top:8px;}
+.rank-bronze{background:rgba(205,127,50,0.15);color:#cd7f32;border:1px solid rgba(205,127,50,0.3);}
+.rank-silver{background:rgba(192,192,192,0.15);color:#c0c0c0;border:1px solid rgba(192,192,192,0.3);}
+.rank-gold{background:rgba(255,215,0,0.12);color:var(--gold);border:1px solid rgba(255,215,0,0.3);}
+.rank-platinum{background:rgba(0,220,255,0.1);color:#00dcff;border:1px solid rgba(0,220,255,0.3);}
+.rank-diamond{background:rgba(100,149,237,0.15);color:#6495ed;border:1px solid rgba(100,149,237,0.3);}
+.rank-heroic{background:rgba(168,85,247,0.15);color:var(--purple);border:1px solid rgba(168,85,247,0.3);}
+.rank-master{background:rgba(255,107,0,0.15);color:var(--orange);border:1px solid rgba(255,107,0,0.3);}
+.rank-grandmaster{background:rgba(255,0,170,0.15);color:var(--pink);border:1px solid rgba(255,0,170,0.3);}
+.rank-legend{background:rgba(0,255,224,0.12);color:var(--cyan);border:1px solid rgba(0,255,224,0.4);}
+
+/* XP BAR */
+.xp-wrap{padding:0 14px 6px;}
+.xp-top{display:flex;justify-content:space-between;margin-bottom:4px;}
+.xp-label{font-size:9px;color:rgba(200,232,224,0.3);letter-spacing:2px;}
+.xp-num{font-size:9px;color:var(--purple);}
+.xp-bg{background:rgba(168,85,247,0.08);border-radius:4px;height:4px;overflow:hidden;}
+.xp-fill{height:100%;border-radius:4px;background:var(--purple);transition:width 0.5s;}
+
+/* ENERGY */
+.energy-wrap{padding:0 14px 8px;}
+.energy-top{display:flex;justify-content:space-between;margin-bottom:4px;}
+.energy-label{font-size:9px;color:rgba(200,232,224,0.3);letter-spacing:2px;}
 .energy-num{font-size:9px;color:var(--cyan);}
-.energy-bg{background:rgba(0,255,224,0.06);border-radius:4px;height:5px;overflow:hidden;border:1px solid rgba(0,255,224,0.08);}
-.energy-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--cyan),var(--pink));transition:width 0.4s;}
-.stats-row{display:flex;gap:8px;padding:0 16px 12px;}
-.stat-card{flex:1;background:rgba(10,15,20,0.8);border:1px solid rgba(0,255,224,0.07);border-radius:10px;padding:10px 8px;text-align:center;}
-.stat-val{font-family:'Orbitron',monospace;font-size:13px;color:var(--cyan);font-weight:700;}
-.stat-lbl{font-size:8px;color:rgba(200,232,224,0.3);letter-spacing:1px;margin-top:3px;}
-.tap-wrap{display:flex;align-items:center;justify-content:center;padding:10px 0;}
-.coin-btn{position:relative;width:190px;height:190px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.energy-bg{background:rgba(0,255,224,0.06);border-radius:4px;height:4px;overflow:hidden;border:1px solid rgba(0,255,224,0.06);}
+.energy-fill{height:100%;border-radius:4px;background:var(--cyan);transition:width 0.4s;}
+
+/* STATS */
+.stats-row{display:flex;gap:6px;padding:0 14px 10px;}
+.stat-card{flex:1;background:rgba(10,15,20,0.8);border:1px solid rgba(0,255,224,0.06);border-radius:8px;padding:8px 6px;text-align:center;}
+.stat-val{font-family:'Orbitron',monospace;font-size:12px;color:var(--cyan);font-weight:700;}
+.stat-lbl{font-size:7px;color:rgba(200,232,224,0.25);letter-spacing:1px;margin-top:2px;}
+
+/* BOOST BAR */
+.boost-bar{display:flex;gap:8px;padding:0 14px 10px;}
+.boost-btn{flex:1;background:rgba(10,15,20,0.8);border:1px solid rgba(0,255,224,0.1);border-radius:8px;padding:8px 6px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.boost-btn:active{transform:scale(0.95);}
+.boost-btn.active{border-color:var(--gold);background:rgba(255,215,0,0.05);}
+.boost-btn.disabled{opacity:0.4;cursor:not-allowed;}
+.boost-icon{font-size:18px;}
+.boost-name{font-size:8px;color:rgba(200,232,224,0.4);letter-spacing:1px;margin-top:2px;}
+.boost-timer{font-family:'Orbitron',monospace;font-size:9px;color:var(--gold);margin-top:1px;}
+
+/* STREAK */
+.streak-row{display:flex;gap:5px;padding:0 14px 10px;overflow-x:auto;}
+.streak-row::-webkit-scrollbar{height:0;}
+.streak-day{min-width:36px;height:42px;background:rgba(10,15,20,0.8);border:1px solid rgba(0,255,224,0.06);border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:7px;color:rgba(200,232,224,0.3);letter-spacing:1px;gap:3px;}
+.streak-day.done{border-color:rgba(0,255,224,0.2);background:rgba(0,255,224,0.04);}
+.streak-day.today{border-color:var(--gold);background:rgba(255,215,0,0.05);}
+.streak-day.today .sd-icon{color:var(--gold);}
+.streak-day.done .sd-icon{color:var(--cyan);}
+.sd-icon{font-size:14px;}
+
+/* TAP BUTTON */
+.tap-wrap{display:flex;align-items:center;justify-content:center;padding:8px 0;}
+.coin-btn{position:relative;width:170px;height:170px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .cr{position:absolute;border-radius:50%;border:1px solid transparent;}
-.cr1{width:182px;height:182px;border-top-color:var(--cyan);border-right-color:var(--cyan);animation:spinCW 8s linear infinite;box-shadow:0 0 15px rgba(0,255,224,0.2);}
-.cr2{width:158px;height:158px;border-bottom-color:var(--pink);border-left-color:var(--pink);animation:spinCCW 5s linear infinite;}
-.cr3{width:134px;height:134px;border:1px dashed rgba(0,255,224,0.08);animation:spinCW 20s linear infinite;}
-.coin-body{position:relative;z-index:2;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#0d2a1f,#020408);border:2px solid rgba(0,255,224,0.25);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 30px rgba(0,255,224,0.1),inset 0 0 20px rgba(0,0,0,0.5);transition:transform 0.07s,box-shadow 0.07s;}
-.coin-body.tapped{transform:scale(0.92);box-shadow:0 0 50px rgba(0,255,224,0.35),inset 0 0 15px rgba(0,255,224,0.08);}
-.coin-pkc{font-family:'Orbitron',monospace;font-weight:900;font-size:28px;color:var(--cyan);text-shadow:0 0 15px var(--cyan);}
-.coin-sub{font-size:8px;color:rgba(0,255,224,0.4);letter-spacing:2px;margin-top:3px;}
-.section-title{font-size:9px;color:rgba(200,232,224,0.3);letter-spacing:3px;padding:4px 16px 10px;text-transform:uppercase;}
-.upgrade-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 16px;}
-.upgrade-card{background:rgba(10,15,20,0.8);border:1px solid rgba(0,255,224,0.07);border-radius:12px;padding:14px 12px;cursor:pointer;transition:all 0.2s;}
-.upgrade-card:active{transform:scale(0.97);}
-.upgrade-card.can-buy{border-color:rgba(0,255,224,0.2);}
-.upgrade-card.owned{border-color:rgba(0,255,224,0.15);background:rgba(0,255,224,0.04);}
-.upgrade-card.locked{opacity:0.5;cursor:not-allowed;}
-.upg-icon{font-size:24px;margin-bottom:8px;}
-.upg-name{font-size:11px;color:var(--text);font-weight:bold;margin-bottom:4px;letter-spacing:1px;}
-.upg-desc{font-size:9px;color:rgba(200,232,224,0.4);line-height:1.5;margin-bottom:8px;}
-.upg-cost{font-family:'Orbitron',monospace;font-size:11px;}
+.cr1{width:164px;height:164px;border-top-color:var(--cyan);border-right-color:var(--cyan);animation:spinCW 8s linear infinite;}
+.cr2{width:142px;height:142px;border-bottom-color:var(--pink);border-left-color:var(--pink);animation:spinCCW 5s linear infinite;}
+.cr3{width:120px;height:120px;border:1px dashed rgba(0,255,224,0.07);animation:spinCW 20s linear infinite;}
+.coin-body{position:relative;z-index:2;width:106px;height:106px;border-radius:50%;background:rgba(2,15,10,0.9);border:2px solid rgba(0,255,224,0.2);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:transform 0.07s;}
+.coin-body.tapped{transform:scale(0.91);}
+.boost-active .coin-body{border-color:rgba(255,215,0,0.5);}
+.coin-pkc{font-family:'Orbitron',monospace;font-weight:900;font-size:24px;color:var(--cyan);text-shadow:0 0 12px var(--cyan);}
+.coin-sub{font-size:7px;color:rgba(0,255,224,0.35);letter-spacing:2px;margin-top:2px;}
+.boost-glow{font-family:'Orbitron',monospace;font-size:9px;color:var(--gold);letter-spacing:1px;margin-top:2px;}
+
+/* UPGRADES */
+.section-title{font-size:8px;color:rgba(200,232,224,0.25);letter-spacing:3px;padding:2px 14px 8px;text-transform:uppercase;}
+.upgrade-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 14px 14px;}
+.upgrade-card{background:rgba(10,15,20,0.8);border:1px solid rgba(0,255,224,0.06);border-radius:10px;padding:12px 10px;cursor:pointer;transition:all 0.2s;}
+.upgrade-card:active{transform:scale(0.96);}
+.upgrade-card.can-buy{border-color:rgba(0,255,224,0.18);}
+.upgrade-card.owned{border-color:rgba(0,255,224,0.12);background:rgba(0,255,224,0.03);}
+.upgrade-card.locked{opacity:0.45;cursor:not-allowed;}
+.upg-icon{font-size:22px;margin-bottom:6px;}
+.upg-name{font-size:10px;color:var(--text);font-weight:bold;margin-bottom:3px;letter-spacing:1px;}
+.upg-desc{font-size:8px;color:rgba(200,232,224,0.35);line-height:1.5;margin-bottom:6px;}
+.upg-cost{font-family:'Orbitron',monospace;font-size:10px;}
 .upg-cost.affordable{color:var(--gold);}
-.upg-cost.expensive{color:rgba(200,232,224,0.25);}
+.upg-cost.expensive{color:rgba(200,232,224,0.2);}
 .upg-cost.owned-tag{color:var(--cyan);}
-.withdraw-card{margin:4px 16px 16px;background:rgba(10,15,20,0.8);border:1px solid rgba(255,0,170,0.15);border-radius:14px;padding:18px;}
-.withdraw-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.withdraw-icon{font-size:24px;}
-.withdraw-title{font-family:'Orbitron',monospace;font-size:14px;color:var(--text);letter-spacing:2px;}
-.withdraw-desc{font-size:11px;color:rgba(200,232,224,0.5);line-height:1.7;margin-bottom:14px;}
-.withdraw-rate{background:rgba(0,255,224,0.04);border:1px solid rgba(0,255,224,0.1);border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
-.rate-label{font-size:10px;color:rgba(200,232,224,0.4);letter-spacing:2px;}
-.rate-val{font-family:'Orbitron',monospace;font-size:13px;color:var(--cyan);}
-.withdraw-btn{width:100%;padding:14px;background:rgba(255,0,170,0.08);border:1px solid rgba(255,0,170,0.3);border-radius:10px;color:rgba(255,0,170,0.7);font-family:'Orbitron',monospace;font-size:12px;letter-spacing:3px;cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:10px;}
-.soon-badge{background:rgba(255,0,170,0.15);color:var(--pink);font-size:9px;padding:3px 8px;border-radius:4px;border:1px solid rgba(255,0,170,0.3);letter-spacing:2px;}
-.withdraw-note{font-size:9px;color:rgba(200,232,224,0.25);text-align:center;margin-top:10px;letter-spacing:1px;line-height:1.6;}
-.step-card{background:rgba(10,15,20,0.8);border:1px solid rgba(0,255,224,0.07);border-radius:12px;padding:14px 16px;margin:0 16px 10px;}
-.step-num{font-family:'Orbitron',monospace;font-size:11px;color:var(--cyan);margin-bottom:6px;}
-.step-desc{font-size:11px;color:rgba(200,232,224,0.5);line-height:1.6;}
-.lb-list{padding:12px 16px;}
-.lb-card{display:flex;align-items:center;gap:12px;background:rgba(10,15,20,0.8);border:1px solid rgba(0,255,224,0.06);border-radius:10px;padding:12px 14px;margin-bottom:8px;}
-.lb-card.you{border-color:rgba(0,255,224,0.2);background:rgba(0,255,224,0.04);}
-.lb-rank{font-family:'Orbitron',monospace;font-size:13px;min-width:32px;}
+
+/* REFERRAL PAGE */
+.ref-hero{margin:12px 14px 10px;background:rgba(168,85,247,0.05);border:1px solid rgba(168,85,247,0.15);border-radius:14px;padding:16px;text-align:center;}
+.ref-count-big{font-family:'Orbitron',monospace;font-size:32px;color:var(--purple);font-weight:900;}
+.ref-label{font-size:9px;color:rgba(200,232,224,0.3);letter-spacing:3px;margin-bottom:4px;}
+.ref-earned{font-size:11px;color:rgba(255,215,0,0.6);margin-top:4px;}
+.ref-link-box{margin:0 14px 10px;background:rgba(10,15,20,0.8);border:1px solid rgba(168,85,247,0.2);border-radius:10px;padding:12px 14px;}
+.ref-link-label{font-size:8px;color:rgba(200,232,224,0.3);letter-spacing:2px;margin-bottom:6px;}
+.ref-link-text{font-size:11px;color:var(--cyan);word-break:break-all;margin-bottom:8px;}
+.copy-btn{width:100%;padding:10px;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);border-radius:8px;color:var(--purple);font-family:'Orbitron',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;}
+.copy-btn:active{transform:scale(0.97);}
+.share-btn{width:100%;padding:10px;background:rgba(0,255,224,0.08);border:1px solid rgba(0,255,224,0.2);border-radius:8px;color:var(--cyan);font-family:'Orbitron',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;margin-top:6px;transition:all 0.2s;}
+.share-btn:active{transform:scale(0.97);}
+.commission-card{margin:0 14px 10px;background:rgba(10,15,20,0.8);border:1px solid rgba(0,255,224,0.06);border-radius:10px;padding:14px;}
+.comm-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(0,255,224,0.05);}
+.comm-row:last-child{border-bottom:none;}
+.comm-label{font-size:10px;color:rgba(200,232,224,0.5);}
+.comm-val{font-family:'Orbitron',monospace;font-size:11px;color:var(--cyan);}
+.comm-val.gold{color:var(--gold);}
+.ref-list{padding:0 14px;}
+.ref-item{display:flex;align-items:center;gap:10px;background:rgba(10,15,20,0.8);border:1px solid rgba(168,85,247,0.08);border-radius:8px;padding:10px 12px;margin-bottom:6px;}
+.ref-item-icon{font-size:16px;}
+.ref-item-info{flex:1;}
+.ref-item-name{font-size:11px;color:var(--text);}
+.ref-item-pts{font-size:9px;color:rgba(200,232,224,0.3);margin-top:1px;}
+.ref-item-earn{font-family:'Orbitron',monospace;font-size:10px;color:var(--purple);}
+
+/* PROFILE PAGE */
+.profile-hero{margin:12px 14px 10px;background:rgba(10,15,20,0.8);border:1px solid rgba(0,255,224,0.1);border-radius:14px;padding:18px;text-align:center;}
+.profile-avatar{width:64px;height:64px;border-radius:50%;background:rgba(0,255,224,0.08);border:2px solid rgba(0,255,224,0.2);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:22px;color:var(--cyan);margin:0 auto 10px;}
+.profile-name{font-family:'Orbitron',monospace;font-size:14px;color:var(--text);letter-spacing:2px;}
+.profile-since{font-size:9px;color:rgba(200,232,224,0.3);letter-spacing:1px;margin-top:3px;}
+.achievements-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:0 14px 14px;}
+.ach-card{background:rgba(10,15,20,0.8);border:1px solid rgba(0,255,224,0.06);border-radius:8px;padding:10px 6px;text-align:center;}
+.ach-card.unlocked{border-color:rgba(255,215,0,0.2);background:rgba(255,215,0,0.03);}
+.ach-card.locked{opacity:0.35;}
+.ach-icon{font-size:20px;}
+.ach-name{font-size:7px;color:rgba(200,232,224,0.3);letter-spacing:1px;margin-top:4px;line-height:1.3;}
+
+/* WITHDRAW PAGE */
+.withdraw-card{margin:4px 14px 14px;background:rgba(10,15,20,0.8);border:1px solid rgba(255,0,170,0.12);border-radius:12px;padding:16px;}
+.withdraw-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.withdraw-title{font-family:'Orbitron',monospace;font-size:13px;color:var(--text);letter-spacing:2px;}
+.withdraw-desc{font-size:10px;color:rgba(200,232,224,0.4);line-height:1.7;margin-bottom:12px;}
+.withdraw-rate{background:rgba(0,255,224,0.03);border:1px solid rgba(0,255,224,0.08);border-radius:7px;padding:9px 12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}
+.rate-label{font-size:9px;color:rgba(200,232,224,0.35);letter-spacing:2px;}
+.rate-val{font-family:'Orbitron',monospace;font-size:12px;color:var(--cyan);}
+.withdraw-btn{width:100%;padding:13px;background:rgba(255,0,170,0.06);border:1px solid rgba(255,0,170,0.25);border-radius:9px;color:rgba(255,0,170,0.6);font-family:'Orbitron',monospace;font-size:11px;letter-spacing:3px;cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:8px;}
+.soon-badge{background:rgba(255,0,170,0.12);color:var(--pink);font-size:8px;padding:2px 7px;border-radius:4px;border:1px solid rgba(255,0,170,0.25);letter-spacing:2px;}
+
+/* LEADERBOARD */
+.lb-list{padding:10px 14px;}
+.lb-card{display:flex;align-items:center;gap:10px;background:rgba(10,15,20,0.8);border:1px solid rgba(0,255,224,0.05);border-radius:9px;padding:11px 12px;margin-bottom:7px;}
+.lb-card.you{border-color:rgba(0,255,224,0.18);background:rgba(0,255,224,0.03);}
+.lb-rank{font-family:'Orbitron',monospace;font-size:12px;min-width:28px;}
 .lb-rank.r1{color:var(--gold);}
 .lb-rank.r2{color:#c0c0c0;}
 .lb-rank.r3{color:#cd7f32;}
-.lb-rank.rn{color:rgba(200,232,224,0.2);}
+.lb-rank.rn{color:rgba(200,232,224,0.18);}
 .lb-info{flex:1;}
-.lb-name{font-size:13px;color:var(--text);}
-.lb-pts{font-size:10px;color:rgba(200,232,224,0.35);margin-top:2px;letter-spacing:1px;}
-.lb-score{font-family:'Orbitron',monospace;font-size:12px;color:var(--gold);}
-.save-indicator{position:fixed;top:60px;right:12px;z-index:50;font-size:10px;color:var(--cyan);opacity:0;transition:opacity 0.3s;letter-spacing:1px;}
+.lb-name{font-size:12px;color:var(--text);}
+.lb-pts{font-size:9px;color:rgba(200,232,224,0.3);margin-top:1px;letter-spacing:1px;}
+.lb-score{font-family:'Orbitron',monospace;font-size:11px;color:var(--gold);}
+
+/* MISC */
+.save-indicator{position:fixed;top:58px;right:10px;z-index:50;font-size:9px;color:var(--cyan);opacity:0;transition:opacity 0.3s;letter-spacing:1px;}
 .save-indicator.show{opacity:1;}
-.tab-bar{position:fixed;bottom:0;left:0;right:0;z-index:10;display:flex;background:rgba(2,4,8,0.97);border-top:1px solid rgba(0,255,224,0.08);backdrop-filter:blur(10px);}
-.tab{flex:1;padding:10px 0 12px;text-align:center;cursor:pointer;transition:all 0.2s;border-top:2px solid transparent;}
+.tab-bar{position:fixed;bottom:0;left:0;right:0;z-index:10;display:flex;background:rgba(2,4,8,0.97);border-top:1px solid rgba(0,255,224,0.07);backdrop-filter:blur(10px);}
+.tab{flex:1;padding:8px 0 10px;text-align:center;cursor:pointer;border-top:2px solid transparent;}
 .tab.active{border-top-color:var(--cyan);}
-.tab-icon{font-size:20px;}
-.tab-label{font-size:8px;letter-spacing:2px;margin-top:3px;color:rgba(200,232,224,0.3);}
+.tab-icon{font-size:18px;}
+.tab-label{font-size:7px;letter-spacing:2px;margin-top:2px;color:rgba(200,232,224,0.25);}
 .tab.active .tab-label{color:var(--cyan);}
 .particle{position:fixed;pointer-events:none;z-index:100;font-family:'Orbitron',monospace;font-weight:900;animation:pFly 0.7s ease forwards;}
-@keyframes pFly{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-70px) scale(0.6);}}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:200;background:rgba(0,255,224,0.1);border:1px solid rgba(0,255,224,0.3);border-radius:8px;padding:8px 16px;font-size:11px;color:var(--cyan);letter-spacing:1px;opacity:0;transition:opacity 0.3s;white-space:nowrap;}
+.toast.show{opacity:1;}
+@keyframes pFly{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-65px) scale(0.5);}}
 @keyframes spinCW{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 @keyframes spinCCW{from{transform:rotate(0deg);}to{transform:rotate(-360deg);}}
 </style>
@@ -106,8 +202,9 @@ body{background:var(--dark);color:var(--text);font-family:'Share Tech Mono',mono
 <div class="bg-grid"></div>
 <div class="scanlines"></div>
 <div class="save-indicator" id="saveInd">💾 SAVED</div>
+<div class="toast" id="toast"></div>
 
-<!-- MINE PAGE -->
+<!-- ========== MINE PAGE ========== -->
 <div class="page" id="minePage">
   <div class="header">
     <div class="header-logo"><span>Pak</span>Chain</div>
@@ -119,61 +216,204 @@ body{background:var(--dark);color:var(--text);font-family:'Share Tech Mono',mono
   <div class="scroll-content">
     <div class="balance-card">
       <div class="balance-label">// YOUR POINTS</div>
-      <div class="balance-points" id="balanceDisp">0</div>
+      <div class="balance-points" id="balanceDisp">0.00</div>
       <div class="balance-unit">PTS</div>
-      <div class="balance-note">Points → PKC on mainnet launch</div>
+      <div id="rankBadge" class="rank-badge rank-bronze">🥉 BRONZE</div>
+      <div class="balance-note" style="margin-top:6px;">= <span id="pkcEquiv">0.00000</span> PKC (at launch)</div>
     </div>
+
+    <div class="xp-wrap">
+      <div class="xp-top"><span class="xp-label">✨ RANK XP</span><span class="xp-num" id="xpDisp">0 / 100</span></div>
+      <div class="xp-bg"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+    </div>
+
     <div class="energy-wrap">
       <div class="energy-top"><span class="energy-label">⚡ ENERGY</span><span class="energy-num" id="energyDisp">500/500</span></div>
       <div class="energy-bg"><div class="energy-fill" id="energyFill" style="width:100%"></div></div>
     </div>
+
     <div class="stats-row">
-      <div class="stat-card"><div class="stat-val" id="tapPwrDisp">+1</div><div class="stat-lbl">TAP POWER</div></div>
+      <div class="stat-card"><div class="stat-val" id="tapPwrDisp">+0.01</div><div class="stat-lbl">TAP POWER</div></div>
       <div class="stat-card"><div class="stat-val" id="tapsDisp">0</div><div class="stat-lbl">TOTAL TAPS</div></div>
       <div class="stat-card"><div class="stat-val" id="passiveDisp">0/s</div><div class="stat-lbl">AUTO MINE</div></div>
+      <div class="stat-card"><div class="stat-val" id="refDisp">0</div><div class="stat-lbl">REFERRALS</div></div>
     </div>
+
+    <div class="section-title">// DAILY BOOST</div>
+    <div class="boost-bar">
+      <div class="boost-btn" id="boostTap" onclick="activateBoost()">
+        <div class="boost-icon">⚡</div>
+        <div class="boost-name">3X TAP</div>
+        <div class="boost-timer" id="boostTimer">FREE</div>
+      </div>
+      <div class="boost-btn" id="boostEnergy" onclick="refillEnergy()">
+        <div class="boost-icon">🔋</div>
+        <div class="boost-name">REFILL</div>
+        <div class="boost-timer" id="refillTimer">FREE</div>
+      </div>
+      <div class="boost-btn" onclick="showPage('ref')">
+        <div class="boost-icon">👥</div>
+        <div class="boost-name">INVITE</div>
+        <div class="boost-timer" id="refBonus">+5%</div>
+      </div>
+    </div>
+
+    <div class="section-title">// DAILY STREAK</div>
+    <div class="streak-row" id="streakRow"></div>
+
+    <div class="section-title">// TAP TO MINE</div>
     <div class="tap-wrap">
       <div class="coin-btn" id="coinBtn">
         <div class="cr cr1"></div><div class="cr cr2"></div><div class="cr cr3"></div>
         <div class="coin-body" id="coinBody">
           <div class="coin-pkc">PKC</div>
           <div class="coin-sub">TAP TO MINE</div>
+          <div class="boost-glow" id="boostGlow" style="display:none;">⚡ 3X</div>
         </div>
       </div>
     </div>
+
     <div class="section-title">// UPGRADES</div>
     <div class="upgrade-grid" id="upgradeGrid"></div>
   </div>
 </div>
 
-<!-- WITHDRAW PAGE -->
+<!-- ========== REFERRAL PAGE ========== -->
+<div class="page hidden" id="refPage">
+  <div class="header">
+    <div class="header-logo"><span>Pak</span>Chain</div>
+    <div class="header-right"><div class="header-level" style="color:var(--purple);">👥 REFER</div></div>
+  </div>
+  <div class="scroll-content" style="padding:0;">
+    <div class="ref-hero">
+      <div class="ref-label">// TOTAL REFERRALS</div>
+      <div class="ref-count-big" id="refCountBig">0</div>
+      <div class="ref-earned">Earned from refs: <span id="refEarnedDisp" style="color:var(--gold);">0.00</span> PTS</div>
+    </div>
+
+    <div class="ref-link-box">
+      <div class="ref-link-label">// YOUR INVITE LINK</div>
+      <div class="ref-link-text" id="refLinkText">Loading...</div>
+      <button class="copy-btn" onclick="copyRefLink()">📋 COPY LINK</button>
+      <button class="share-btn" onclick="shareRefLink()">📤 SHARE ON TELEGRAM</button>
+    </div>
+
+    <div class="section-title">// COMMISSION SYSTEM</div>
+    <div class="commission-card">
+      <div class="comm-row">
+        <span class="comm-label">Level 1 (Direct refs)</span>
+        <span class="comm-val gold">5% of their points</span>
+      </div>
+      <div class="comm-row">
+        <span class="comm-label">Level 2 (Their refs)</span>
+        <span class="comm-val">2% of their points</span>
+      </div>
+      <div class="comm-row">
+        <span class="comm-label">Bonus per referral</span>
+        <span class="comm-val gold">+50 PTS instant</span>
+      </div>
+      <div class="comm-row">
+        <span class="comm-label">Your commission earned</span>
+        <span class="comm-val gold" id="totalCommDisp">0.00 PTS</span>
+      </div>
+    </div>
+
+    <div class="section-title">// HOW IT WORKS</div>
+    <div style="margin:0 14px 10px;background:rgba(10,15,20,0.8);border:1px solid rgba(168,85,247,0.1);border-radius:10px;padding:14px;">
+      <div style="font-size:10px;color:rgba(200,232,224,0.5);line-height:2;">
+        1️⃣ Copy your unique invite link<br>
+        2️⃣ Share it with friends on Telegram<br>
+        3️⃣ When they join, you will get +50 PTS<br>
+        4️⃣ You will keep getting 5% of every point they earn<br>
+        5️⃣ You will also get 2% from their referrals!
+      </div>
+    </div>
+
+    <div class="section-title">// YOUR REFERRALS</div>
+    <div class="ref-list" id="refList">
+      <div style="text-align:center;padding:20px;font-size:10px;color:rgba(200,232,224,0.2);letter-spacing:2px;">NO REFERRALS YET</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PROFILE PAGE ========== -->
+<div class="page hidden" id="profilePage">
+  <div class="header">
+    <div class="header-logo"><span>Pak</span>Chain</div>
+    <div class="header-right"><div class="header-level" style="color:var(--purple);">👤 PROFILE</div></div>
+  </div>
+  <div class="scroll-content" style="padding:0;">
+    <div class="profile-hero">
+      <div class="profile-avatar" id="profileAvatar">P</div>
+      <div class="profile-name" id="profileName">@MINER</div>
+      <div class="profile-since" id="profileSince">Joined today</div>
+      <div id="profileRankBadge" class="rank-badge rank-bronze" style="margin-top:8px;">🥉 BRONZE</div>
+      <div style="margin-top:10px;font-size:9px;color:rgba(200,232,224,0.25);letter-spacing:2px;">RANK PROGRESS</div>
+      <div style="background:rgba(168,85,247,0.08);border-radius:4px;height:5px;margin:6px 20px 0;overflow:hidden;">
+        <div id="profileXpFill" style="height:100%;background:var(--purple);border-radius:4px;transition:width 0.5s;width:0%"></div>
+      </div>
+      <div style="font-size:9px;color:var(--purple);margin-top:4px;" id="profileXpText">0 / 100 XP</div>
+    </div>
+
+    <div class="section-title">// RANK TIERS</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 14px 14px;">
+      <div id="rt-bronze" class="stat-card"><div class="stat-val" style="font-size:16px;">🥉</div><div class="stat-lbl">BRONZE<br><span style="color:rgba(200,232,224,0.2);">0+</span></div></div>
+      <div id="rt-silver" class="stat-card"><div class="stat-val" style="font-size:16px;">🥈</div><div class="stat-lbl">SILVER<br><span style="color:rgba(200,232,224,0.2);">500+</span></div></div>
+      <div id="rt-gold" class="stat-card"><div class="stat-val" style="font-size:16px;">🥇</div><div class="stat-lbl">GOLD<br><span style="color:rgba(200,232,224,0.2);">2K+</span></div></div>
+      <div id="rt-platinum" class="stat-card"><div class="stat-val" style="font-size:16px;">💠</div><div class="stat-lbl">PLATINUM<br><span style="color:rgba(200,232,224,0.2);">10K+</span></div></div>
+      <div id="rt-diamond" class="stat-card"><div class="stat-val" style="font-size:16px;">💎</div><div class="stat-lbl">DIAMOND<br><span style="color:rgba(200,232,224,0.2);">50K+</span></div></div>
+      <div id="rt-heroic" class="stat-card"><div class="stat-val" style="font-size:16px;">🦸</div><div class="stat-lbl">HEROIC<br><span style="color:rgba(200,232,224,0.2);">150K+</span></div></div>
+      <div id="rt-master" class="stat-card"><div class="stat-val" style="font-size:16px;">👑</div><div class="stat-lbl">MASTER<br><span style="color:rgba(200,232,224,0.2);">500K+</span></div></div>
+      <div id="rt-grandmaster" class="stat-card"><div class="stat-val" style="font-size:16px;">🌟</div><div class="stat-lbl">G.MASTER<br><span style="color:rgba(200,232,224,0.2);">1M+</span></div></div>
+      <div id="rt-legend" class="stat-card"><div class="stat-val" style="font-size:16px;">⚡</div><div class="stat-lbl">LEGEND<br><span style="color:rgba(200,232,224,0.2);">5M+</span></div></div>
+    </div>
+
+    <div class="section-title">// ACHIEVEMENTS</div>
+    <div class="achievements-grid" id="achievementsGrid"></div>
+
+    <div class="section-title">// MINING STATS</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 14px 14px;">
+      <div class="stat-card"><div class="stat-val" id="pTaps">0</div><div class="stat-lbl">TOTAL TAPS</div></div>
+      <div class="stat-card"><div class="stat-val" id="pPoints">0.00</div><div class="stat-lbl">TOTAL POINTS</div></div>
+      <div class="stat-card"><div class="stat-val" id="pStreak">0</div><div class="stat-lbl">DAY STREAK</div></div>
+      <div class="stat-card"><div class="stat-val" id="pRefs">0</div><div class="stat-lbl">REFERRALS</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== WITHDRAW PAGE ========== -->
 <div class="page hidden" id="withdrawPage">
   <div class="header">
     <div class="header-logo"><span>Pak</span>Chain</div>
     <div class="header-right"><div class="header-level" id="levelDisp2">LVL 1</div></div>
   </div>
-  <div class="scroll-content" style="padding:16px 0;">
-    <div class="balance-card" style="margin-bottom:16px;">
+  <div class="scroll-content" style="padding:14px 0;">
+    <div class="balance-card" style="margin-bottom:14px;">
       <div class="balance-label">// YOUR POINTS</div>
-      <div class="balance-points" id="balanceDisp2">0</div>
+      <div class="balance-points" id="balanceDisp2">0.00</div>
       <div class="balance-unit">PTS</div>
-      <div class="balance-note">= <span id="pkc-equiv">0.000</span> PKC (at launch)</div>
+      <div class="balance-note">= <span id="pkc-equiv">0.00000</span> PKC (at launch)</div>
     </div>
     <div class="withdraw-card">
-      <div class="withdraw-header"><div class="withdraw-icon">💰</div><div class="withdraw-title">WITHDRAW TO WALLET</div></div>
-      <div class="withdraw-desc">Convert your mined points to real PKC coins and withdraw directly to your official PakChain wallet address (pak1...).</div>
-      <div class="withdraw-rate"><span class="rate-label">CONVERSION RATE</span><span class="rate-val">1000 PTS = 1 PKC</span></div>
+      <div class="withdraw-header"><div style="font-size:22px;">💰</div><div class="withdraw-title">WITHDRAW TO WALLET</div></div>
+      <div class="withdraw-desc">Convert your mined points to real PKC coins and withdraw directly to your PakChain wallet (pak1...).</div>
+      <div class="withdraw-rate"><span class="rate-label">CONVERSION RATE</span><span class="rate-val">100,000 PTS = 1 PKC</span></div>
       <div class="withdraw-btn"><span>WITHDRAW PKC</span><span class="soon-badge">COMING SOON</span></div>
-      <div class="withdraw-note">Withdrawals enabled after PakChain mainnet launch.<br>Download PakChain Core wallet to get your pak1... address ready.</div>
+      <div style="font-size:9px;color:rgba(200,232,224,0.2);text-align:center;margin-top:10px;letter-spacing:1px;line-height:1.7;">Withdrawals enabled after PakChain mainnet launch.<br>Download PakChain Core wallet to get your pak1... address.</div>
     </div>
-    <div class="section-title" style="margin-top:8px;">// HOW IT WORKS</div>
-    <div class="step-card"><div class="step-num">01 — MINE POINTS</div><div class="step-desc">Tap the coin daily and buy upgrades to mine as many points as possible before mainnet launch.</div></div>
-    <div class="step-card"><div class="step-num">02 — GET WALLET</div><div class="step-desc">Download PakChain Core wallet for Linux. Your pak1... address is where PKC will be sent.</div></div>
-    <div class="step-card" style="border-color:rgba(255,0,170,0.1)"><div class="step-num" style="color:var(--pink)">03 — WITHDRAW <span style="font-size:9px;opacity:0.6">(COMING SOON)</span></div><div class="step-desc">After mainnet launch, enter your pak1... address and withdraw PKC at 1000 PTS = 1 PKC rate.</div></div>
+    <div class="section-title" style="margin-top:6px;">// HOW IT WORKS</div>
+    <div style="margin:0 14px 8px;background:rgba(10,15,20,0.8);border:1px solid rgba(0,255,224,0.06);border-radius:10px;padding:12px 14px;">
+      <div style="font-size:10px;color:rgba(200,232,224,0.5);line-height:2.2;">
+        01 — Mine points by tapping daily &amp; buying upgrades<br>
+        02 — Refer friends for extra 5% commission<br>
+        03 — Download PakChain Core wallet (pak1... address)<br>
+        04 — After mainnet, withdraw at 100,000 PTS = 1 PKC
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- LEADERBOARD PAGE -->
+<!-- ========== LEADERBOARD PAGE ========== -->
 <div class="page hidden" id="lbPage">
   <div class="header">
     <div class="header-logo"><span>Pak</span>Chain</div>
@@ -184,217 +424,589 @@ body{background:var(--dark);color:var(--text);font-family:'Share Tech Mono',mono
   </div>
 </div>
 
-<!-- TAB BAR -->
+<!-- ========== TAB BAR ========== -->
 <div class="tab-bar">
   <div class="tab active" id="tab-mine" onclick="showPage('mine')"><div class="tab-icon">⛏️</div><div class="tab-label">MINE</div></div>
+  <div class="tab" id="tab-ref" onclick="showPage('ref')"><div class="tab-icon">👥</div><div class="tab-label">REFER</div></div>
+  <div class="tab" id="tab-profile" onclick="showPage('profile')"><div class="tab-icon">👤</div><div class="tab-label">PROFILE</div></div>
   <div class="tab" id="tab-withdraw" onclick="showPage('withdraw')"><div class="tab-icon">💸</div><div class="tab-label">WITHDRAW</div></div>
   <div class="tab" id="tab-lb" onclick="showPage('lb')"><div class="tab-icon">🏆</div><div class="tab-label">RANKS</div></div>
 </div>
 
 <script>
-// ============================================
-// SUPABASE CONFIG — APNA URL AUR KEY YAHAN DALO
-// ============================================
+// ============ SUPABASE CONFIG ============
 const SUPABASE_URL = 'https://hmvbaqrrdyyhljounvkq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtdmJhcXJyZHl5aGxqb3VudmtxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODIxMTcsImV4cCI6MjA5NjU1ODExN30.jRZ40Baacih4IvmTmtvL7N2MdoyEoHoA537wzg6G6eA';
-// ============================================
-
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Telegram init
-if(window.Telegram?.WebApp) { Telegram.WebApp.ready(); Telegram.WebApp.expand(); }
+// ============ RANK SYSTEM ============
+const RANKS = [
+  { name:'BRONZE',    icon:'🥉', cls:'rank-bronze',    min:0,       max:500 },
+  { name:'SILVER',    icon:'🥈', cls:'rank-silver',    min:500,     max:2000 },
+  { name:'GOLD',      icon:'🥇', cls:'rank-gold',      min:2000,    max:10000 },
+  { name:'PLATINUM',  icon:'💠', cls:'rank-platinum',  min:10000,   max:50000 },
+  { name:'DIAMOND',   icon:'💎', cls:'rank-diamond',   min:50000,   max:150000 },
+  { name:'HEROIC',    icon:'🦸', cls:'rank-heroic',    min:150000,  max:500000 },
+  { name:'MASTER',    icon:'👑', cls:'rank-master',    min:500000,  max:1000000 },
+  { name:'GRANDMASTER',icon:'🌟',cls:'rank-grandmaster',min:1000000,max:5000000 },
+  { name:'LEGEND',    icon:'⚡', cls:'rank-legend',    min:5000000, max:Infinity },
+];
 
-// User ID from Telegram or fallback
+function getRank(pts) {
+  for(let i=RANKS.length-1;i>=0;i--) { if(pts>=RANKS[i].min) return {rank:RANKS[i],idx:i}; }
+  return {rank:RANKS[0],idx:0};
+}
+
+// ============ ACHIEVEMENTS ============
+const ACHIEVEMENTS = [
+  {id:'a1',icon:'⛏️',name:'FIRST TAP',check:s=>s.taps>=1},
+  {id:'a2',icon:'💯',name:'100 TAPS',check:s=>s.taps>=100},
+  {id:'a3',icon:'🔥',name:'1K TAPS',check:s=>s.taps>=1000},
+  {id:'a4',icon:'💎',name:'10K PTS',check:s=>s.points>=10000},
+  {id:'a5',icon:'🚀',name:'100K PTS',check:s=>s.points>=100000},
+  {id:'a6',icon:'👥',name:'FIRST REF',check:s=>s.refCount>=1},
+  {id:'a7',icon:'🌐',name:'5 REFS',check:s=>s.refCount>=5},
+  {id:'a8',icon:'📅',name:'3 DAY STREAK',check:s=>s.streak>=3},
+  {id:'a9',icon:'🏆',name:'7 DAY STREAK',check:s=>s.streak>=7},
+  {id:'aa',icon:'⚡',name:'AUTO MINER',check:s=>s.passive>0},
+  {id:'ab',icon:'🛸',name:'GRANDMASTER',check:s=>s.points>=1000000},
+  {id:'ac',icon:'🌟',name:'LEGEND',check:s=>s.points>=5000000},
+];
+
+// ============ UPGRADE DEFS ============
+const upgradeDefs = [
+  {id:'u1',icon:'⚡',name:'Power Boost',  desc:'+0.05 tap power',  cost:500,    effect:()=>{ S.tapPower=parseFloat((S.tapPower+0.05).toFixed(2)); }},
+  {id:'u2',icon:'🔋',name:'Energy Tank',  desc:'+500 max energy',  cost:1000,   effect:()=>{ S.maxEnergy+=500; S.energy=S.maxEnergy; }},
+  {id:'u3',icon:'⛏️',name:'Auto Miner',   desc:'+0.02 pts/sec',    cost:2000,   effect:()=>{ S.passive=parseFloat((S.passive+0.02).toFixed(3)); }},
+  {id:'u4',icon:'🚀',name:'Turbo Tap',    desc:'+0.10 tap power',  cost:5000,   effect:()=>{ S.tapPower=parseFloat((S.tapPower+0.10).toFixed(2)); }},
+  {id:'u5',icon:'💎',name:'Diamond Pick', desc:'+0.25 tap power',  cost:10000,  effect:()=>{ S.tapPower=parseFloat((S.tapPower+0.25).toFixed(2)); }},
+  {id:'u6',icon:'🌐',name:'Full Node',    desc:'+0.50 pts/sec',    cost:25000,  effect:()=>{ S.passive=parseFloat((S.passive+0.50).toFixed(2)); }},
+  {id:'u7',icon:'⚗️',name:'Hash Reactor', desc:'+1.00 tap power',  cost:50000,  effect:()=>{ S.tapPower=parseFloat((S.tapPower+1.00).toFixed(2)); }},
+  {id:'u8',icon:'🛸',name:'Quantum Mine', desc:'+5.00 pts/sec',    cost:100000, effect:()=>{ S.passive=parseFloat((S.passive+5.00).toFixed(2)); }},
+  {id:'u9',icon:'🧠',name:'AI Core',      desc:'+10.00 pts/sec',   cost:500000, effect:()=>{ S.passive=parseFloat((S.passive+10.00).toFixed(2)); }},
+  {id:'ua',icon:'🌌',name:'Galaxy Rig',   desc:'+50 tap power',    cost:1000000,effect:()=>{ S.tapPower=parseFloat((S.tapPower+50).toFixed(2)); }},
+];
+
+// ============ STREAK DAYS CONFIG ============
+const STREAK_BONUS = [10, 20, 30, 50, 75, 100, 200];
+
+// ============ TELEGRAM INIT ============
+if(window.Telegram?.WebApp) { Telegram.WebApp.ready(); Telegram.WebApp.expand(); }
 let userId = 'guest_' + Math.random().toString(36).slice(2,10);
 let tgUser = '@miner';
+let tgId = null;
 if(window.Telegram?.WebApp?.initDataUnsafe?.user) {
   const u = Telegram.WebApp.initDataUnsafe.user;
+  tgId = u.id;
   userId = 'tg_' + u.id;
   tgUser = '@' + (u.username || u.first_name || 'miner');
 }
 document.getElementById('usernameDisp').textContent = tgUser;
 
-// State
+// ============ BOT USERNAME — CHANGE THIS ============
+const BOT_USERNAME = 'PakChainMinerBot';
+
+// ============ STATE ============
 let S = {
-  points: 0, taps: 0, tapPower: 1,
-  energy: 500, maxEnergy: 500, passive: 0,
-  level: 1, upgrades: {}
+  points: 0,
+  taps: 0,
+  tapPower: 0.01,
+  energy: 500,
+  maxEnergy: 500,
+  passive: 0,
+  level: 1,
+  upgrades: {},
+  refCount: 0,
+  refEarned: 0,
+  referredBy: null,
+  streak: 0,
+  lastLoginDate: null,
+  boostUsedDate: null,
+  refillUsedDate: null,
+  boostActive: false,
+  boostEnd: 0,
+  achievements: {},
+  joinedDate: new Date().toISOString(),
 };
 
-// Load from localStorage first (fast)
-try { const sv = localStorage.getItem('pkc_v3'); if(sv) S = {...S, ...JSON.parse(sv)}; } catch(e) {}
+// ============ LOCAL STORAGE ============
+try {
+  const sv = localStorage.getItem('pkc_v4');
+  if(sv) S = {...S,...JSON.parse(sv)};
+} catch(e) {}
 
-// Load from Supabase (sync)
+// ============ HANDLE REFERRAL FROM URL ============
+async function handleReferral() {
+  const params = new URLSearchParams(window.location.search);
+  const startParam = params.get('tgWebAppStartParam') || 
+    (window.Telegram?.WebApp?.initDataUnsafe?.start_param);
+  if(startParam && startParam.startsWith('ref_') && !S.referredBy) {
+    const referrerId = startParam.replace('ref_','');
+    if(referrerId !== userId) {
+      S.referredBy = referrerId;
+      S.points += 50;
+      showToast('🎉 +50 PTS — Welcome bonus!');
+      await creditReferrer(referrerId);
+    }
+  }
+}
+
+async function creditReferrer(referrerId) {
+  try {
+    const { data } = await db.from('users').select('points,refCount,refEarned').eq('id',referrerId).single();
+    if(data) {
+      const bonus = 50;
+      await db.from('users').update({
+        refCount: (data.refCount||0)+1,
+        refEarned: parseFloat(((data.refEarned||0)+bonus).toFixed(2)),
+        points: parseFloat(((data.points||0)+bonus).toFixed(2))
+      }).eq('id',referrerId);
+    }
+  } catch(e) {}
+}
+
+// ============ LOAD FROM DB ============
 async function loadFromDB() {
   try {
     const { data } = await db.from('users').select('*').eq('id', userId).single();
     if(data) {
       S = {
-        points: data.points || 0,
-        taps: data.taps || 0,
-        tapPower: data.tap_power || 1,
-        energy: data.energy || 500,
-        maxEnergy: data.max_energy || 500,
-        passive: data.passive || 0,
-        level: data.level || 1,
-        upgrades: data.upgrades || {}
+        points: parseFloat(data.points)||0,
+        taps: data.taps||0,
+        tapPower: parseFloat(data.tap_power)||0.01,
+        energy: parseFloat(data.energy)||500,
+        maxEnergy: data.max_energy||500,
+        passive: parseFloat(data.passive)||0,
+        level: data.level||1,
+        upgrades: data.upgrades||{},
+        refCount: data.ref_count||0,
+        refEarned: parseFloat(data.ref_earned)||0,
+        referredBy: data.referred_by||null,
+        streak: data.streak||0,
+        lastLoginDate: data.last_login_date||null,
+        boostUsedDate: data.boost_used_date||null,
+        refillUsedDate: data.refill_used_date||null,
+        boostActive: false,
+        boostEnd: 0,
+        achievements: data.achievements||{},
+        joinedDate: data.joined_date||new Date().toISOString(),
       };
-      localStorage.setItem('pkc_v3', JSON.stringify(S));
-      updateUI();
+      localStorage.setItem('pkc_v4', JSON.stringify(S));
     }
-  } catch(e) { console.log('DB load failed, using local'); }
+  } catch(e) {}
+  await handleReferral();
+  checkStreak();
+  updateUI();
 }
 
-// Save to Supabase + localStorage
+// ============ SAVE ============
 let saveTimeout = null;
 async function save() {
-  localStorage.setItem('pkc_v3', JSON.stringify(S));
+  localStorage.setItem('pkc_v4', JSON.stringify(S));
   clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(async () => {
+  saveTimeout = setTimeout(async()=>{
     try {
       await db.from('users').upsert({
         id: userId,
         username: tgUser,
-        points: Math.floor(S.points),
+        points: parseFloat(S.points.toFixed(2)),
         taps: S.taps,
         tap_power: S.tapPower,
-        energy: Math.floor(S.energy),
+        energy: parseFloat(S.energy.toFixed(2)),
         max_energy: S.maxEnergy,
         passive: S.passive,
         level: S.level,
         upgrades: S.upgrades,
+        ref_count: S.refCount,
+        ref_earned: parseFloat(S.refEarned.toFixed(2)),
+        referred_by: S.referredBy,
+        streak: S.streak,
+        last_login_date: S.lastLoginDate,
+        boost_used_date: S.boostUsedDate,
+        refill_used_date: S.refillUsedDate,
+        achievements: S.achievements,
+        joined_date: S.joinedDate,
         updated_at: new Date().toISOString()
       });
       const ind = document.getElementById('saveInd');
       ind.classList.add('show');
-      setTimeout(() => ind.classList.remove('show'), 1500);
-    } catch(e) { console.log('DB save failed'); }
+      setTimeout(()=>ind.classList.remove('show'),1200);
+    } catch(e) {}
   }, 3000);
 }
 
-// Upgrades
-const upgradeDefs = [
-  { id:'u1', icon:'⚡', name:'Power Boost', desc:'+2 tap power', cost:500, effect:()=>{ S.tapPower+=2; } },
-  { id:'u2', icon:'🔋', name:'Energy Tank', desc:'+500 max energy', cost:1000, effect:()=>{ S.maxEnergy+=500; S.energy=S.maxEnergy; } },
-  { id:'u3', icon:'⛏️', name:'Auto Miner', desc:'+2 pts/sec auto', cost:2000, effect:()=>{ S.passive+=2; } },
-  { id:'u4', icon:'🚀', name:'Turbo Tap', desc:'+5 tap power', cost:5000, effect:()=>{ S.tapPower+=5; } },
-  { id:'u5', icon:'💎', name:'Diamond Pick', desc:'+10 tap power', cost:10000, effect:()=>{ S.tapPower+=10; } },
-  { id:'u6', icon:'🌐', name:'Full Node', desc:'+20 pts/sec auto', cost:25000, effect:()=>{ S.passive+=20; } },
-  { id:'u7', icon:'⚗️', name:'Hash Reactor', desc:'+50 tap power', cost:50000, effect:()=>{ S.tapPower+=50; } },
-  { id:'u8', icon:'🛸', name:'Quantum Mine', desc:'+100 pts/sec auto', cost:100000, effect:()=>{ S.passive+=100; } },
-];
-
-function updateUI() {
-  const pts = Math.floor(S.points);
-  document.getElementById('balanceDisp').textContent = pts.toLocaleString();
-  document.getElementById('balanceDisp2').textContent = pts.toLocaleString();
-  document.getElementById('pkc-equiv').textContent = (pts/1000).toFixed(3);
-  document.getElementById('energyDisp').textContent = `${Math.floor(S.energy)}/${S.maxEnergy}`;
-  document.getElementById('energyFill').style.width = `${(S.energy/S.maxEnergy)*100}%`;
-  document.getElementById('tapPwrDisp').textContent = `+${S.tapPower}`;
-  document.getElementById('tapsDisp').textContent = S.taps>=1000?(S.taps/1000).toFixed(1)+'K':S.taps;
-  document.getElementById('passiveDisp').textContent = S.passive>0?S.passive+'/s':'0/s';
-  const lvl = Math.min(Math.floor(Math.log10(Math.max(S.points+1,10))*4)+1, 99);
-  S.level = lvl;
-  document.getElementById('levelDisp').textContent = `LVL ${lvl}`;
-  document.getElementById('levelDisp2').textContent = `LVL ${lvl}`;
-  renderUpgrades();
+// ============ STREAK ============
+function checkStreak() {
+  const today = new Date().toDateString();
+  if(S.lastLoginDate === today) return;
+  const yesterday = new Date(Date.now()-86400000).toDateString();
+  if(S.lastLoginDate === yesterday) {
+    S.streak = (S.streak||0)+1;
+  } else if(S.lastLoginDate && S.lastLoginDate !== yesterday) {
+    S.streak = 1;
+  } else {
+    S.streak = Math.max(1, S.streak||1);
+  }
+  S.lastLoginDate = today;
+  const day = Math.min(S.streak,7)-1;
+  const bonus = STREAK_BONUS[day]||STREAK_BONUS[6];
+  S.points = parseFloat((S.points+bonus).toFixed(2));
+  showToast(`📅 Day ${S.streak} streak! +${bonus} PTS`);
+  save();
 }
 
+function renderStreak() {
+  const days = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+  const today = new Date().getDay();
+  const todayIdx = today===0?6:today-1;
+  let html='';
+  for(let i=0;i<7;i++){
+    const done = S.streak>0&&i<(S.streak%7||7);
+    const isToday = i===todayIdx;
+    html+=`<div class="streak-day${done?' done':''}${isToday?' today':''}">
+      <div class="sd-icon">${done?'✅':'⬜'}</div>
+      <div>${days[i]}</div>
+      <div style="color:var(--gold);font-size:7px;">+${STREAK_BONUS[i]}</div>
+    </div>`;
+  }
+  document.getElementById('streakRow').innerHTML=html;
+}
+
+// ============ BOOST ============
+let boostInterval=null;
+function activateBoost() {
+  const today = new Date().toDateString();
+  if(S.boostUsedDate===today) { showToast('⏰ Boost already used today!'); return; }
+  S.boostUsedDate = today;
+  S.boostActive = true;
+  S.boostEnd = Date.now()+30000;
+  document.getElementById('boostGlow').style.display='';
+  document.getElementById('coinBtn').classList.add('boost-active');
+  clearInterval(boostInterval);
+  boostInterval = setInterval(()=>{
+    const left = Math.ceil((S.boostEnd-Date.now())/1000);
+    if(left<=0){
+      S.boostActive=false;
+      document.getElementById('boostGlow').style.display='none';
+      document.getElementById('coinBtn').classList.remove('boost-active');
+      document.getElementById('boostTimer').textContent='USED';
+      document.getElementById('boostTap').classList.add('disabled');
+      clearInterval(boostInterval);
+    } else {
+      document.getElementById('boostTimer').textContent=left+'s';
+    }
+  },500);
+  showToast('⚡ 3X Tap Boost activated — 30 seconds!');
+  save();
+}
+
+function refillEnergy() {
+  const today = new Date().toDateString();
+  if(S.refillUsedDate===today) { showToast('⏰ Refill already used today!'); return; }
+  S.refillUsedDate = today;
+  S.energy = S.maxEnergy;
+  document.getElementById('refillTimer').textContent='USED';
+  document.getElementById('boostEnergy').classList.add('disabled');
+  showToast('🔋 Energy fully refilled!');
+  updateUI(); save();
+}
+
+function updateBoostUI() {
+  const today = new Date().toDateString();
+  if(S.boostUsedDate===today) {
+    document.getElementById('boostTimer').textContent='USED';
+    document.getElementById('boostTap').classList.add('disabled');
+  }
+  if(S.refillUsedDate===today) {
+    document.getElementById('refillTimer').textContent='USED';
+    document.getElementById('boostEnergy').classList.add('disabled');
+  }
+}
+
+// ============ TAP ============
+const coinBody = document.getElementById('coinBody');
+document.getElementById('coinBtn').addEventListener('touchstart',e=>{
+  e.preventDefault();
+  const t=e.changedTouches[0];
+  doTap(t.clientX,t.clientY);
+},{passive:false});
+document.getElementById('coinBtn').addEventListener('click',e=>doTap(e.clientX,e.clientY));
+
+function doTap(x,y) {
+  if(S.energy<1) {
+    coinBody.style.borderColor='rgba(255,0,170,0.5)';
+    setTimeout(()=>coinBody.style.borderColor='',300);
+    showToast('⚠️ Energy empty! Wait or use refill.');
+    return;
+  }
+  S.energy = parseFloat(Math.max(0,S.energy-1).toFixed(2));
+  const multiplier = (S.boostActive && Date.now()<S.boostEnd) ? 3 : 1;
+  const gain = parseFloat((S.tapPower * multiplier).toFixed(4));
+  S.points = parseFloat((S.points + gain).toFixed(4));
+  S.taps++;
+
+  coinBody.classList.add('tapped');
+  setTimeout(()=>coinBody.classList.remove('tapped'),70);
+
+  const p = document.createElement('div');
+  p.className='particle';
+  p.style.cssText=`left:${x-12+Math.random()*24}px;top:${y-28}px;font-size:${10+Math.random()*5}px;color:${multiplier>1?'var(--gold)':Math.random()>0.5?'var(--cyan)':'#fff'};`;
+  p.textContent=`+${gain.toFixed(2)}`;
+  document.body.appendChild(p);
+  setTimeout(()=>p.remove(),700);
+
+  if(window.Telegram?.WebApp) Telegram.WebApp.HapticFeedback?.impactOccurred('light');
+  checkAchievements();
+  updateUI(); save();
+}
+
+// ============ PASSIVE INCOME ============
+setInterval(()=>{
+  if(S.energy < S.maxEnergy) {
+    S.energy = parseFloat(Math.min(S.maxEnergy, S.energy+1).toFixed(2));
+    updateEnergyUI();
+  }
+},1000);
+
+setInterval(()=>{
+  if(S.passive>0) {
+    S.points = parseFloat((S.points + S.passive).toFixed(4));
+    document.getElementById('balanceDisp').textContent = S.points.toFixed(2);
+    document.getElementById('balanceDisp2').textContent = S.points.toFixed(2);
+    document.getElementById('pkc-equiv').textContent = (S.points/100000).toFixed(5);
+    document.getElementById('pkcEquiv').textContent = (S.points/100000).toFixed(5);
+    checkAchievements();
+    save();
+  }
+},1000);
+
+// Commission: every 10 seconds, give commission to referrer based on current points
+let lastCommissionPoints = 0;
+setInterval(async()=>{
+  if(!S.referredBy || S.points <= lastCommissionPoints) return;
+  const earned = parseFloat((S.points - lastCommissionPoints).toFixed(4));
+  const comm1 = parseFloat((earned * 0.05).toFixed(4));
+  lastCommissionPoints = S.points;
+  try {
+    const { data } = await db.from('users').select('points,ref_earned').eq('id',S.referredBy).single();
+    if(data) {
+      await db.from('users').update({
+        points: parseFloat(((data.points||0)+comm1).toFixed(4)),
+        ref_earned: parseFloat(((data.ref_earned||0)+comm1).toFixed(4))
+      }).eq('id',S.referredBy);
+    }
+  } catch(e) {}
+},10000);
+
+// ============ UPGRADES ============
 function renderUpgrades() {
-  document.getElementById('upgradeGrid').innerHTML = upgradeDefs.map(u => {
-    const owned = S.upgrades[u.id];
-    const canBuy = !owned && S.points >= u.cost;
-    const cls = owned?'owned':canBuy?'can-buy':'locked';
-    return `<div class="upgrade-card ${cls}" onclick="buyUpgrade('${u.id}')">
+  document.getElementById('upgradeGrid').innerHTML = upgradeDefs.map(u=>{
+    const owned=S.upgrades[u.id];
+    const canBuy=!owned&&S.points>=u.cost;
+    const cls=owned?'owned':canBuy?'can-buy':'';
+    const lockedCls=(!owned&&!canBuy)?'locked':'';
+    return `<div class="upgrade-card ${cls} ${lockedCls}" onclick="buyUpgrade('${u.id}')">
       <div class="upg-icon">${u.icon}</div>
       <div class="upg-name">${u.name}</div>
       <div class="upg-desc">${u.desc}</div>
-      ${owned?`<div class="upg-cost owned-tag">✅ OWNED</div>`:`<div class="upg-cost ${canBuy?'affordable':'expensive'}">${u.cost.toLocaleString()} PTS</div>`}
+      ${owned
+        ?`<div class="upg-cost owned-tag">✅ OWNED</div>`
+        :`<div class="upg-cost ${canBuy?'affordable':'expensive'}">${u.cost.toLocaleString()} PTS</div>`
+      }
     </div>`;
   }).join('');
 }
 
 function buyUpgrade(id) {
-  const u = upgradeDefs.find(x=>x.id===id);
+  const u=upgradeDefs.find(x=>x.id===id);
   if(!u||S.upgrades[id]||S.points<u.cost) return;
-  S.points -= u.cost;
-  S.upgrades[id] = true;
+  S.points = parseFloat((S.points-u.cost).toFixed(4));
+  S.upgrades[id]=true;
   u.effect();
   updateUI(); save();
+  showToast(`✅ ${u.name} purchased!`);
   if(window.Telegram?.WebApp) Telegram.WebApp.HapticFeedback?.notificationOccurred('success');
 }
 
-// TAP
-const coinBody = document.getElementById('coinBody');
-document.getElementById('coinBtn').addEventListener('touchstart', e => {
-  e.preventDefault();
-  const t = e.changedTouches[0];
-  doTap(t.clientX, t.clientY);
-}, { passive:false });
-document.getElementById('coinBtn').addEventListener('click', e => doTap(e.clientX, e.clientY));
-
-function doTap(x, y) {
-  if(S.energy<1) { coinBody.style.borderColor='rgba(255,0,170,0.5)'; setTimeout(()=>coinBody.style.borderColor='',300); return; }
-  S.energy = Math.max(0, S.energy-1);
-  S.points += S.tapPower;
-  S.taps++;
-  coinBody.classList.add('tapped');
-  setTimeout(()=>coinBody.classList.remove('tapped'), 70);
-  const p = document.createElement('div');
-  p.className = 'particle';
-  p.style.cssText = `left:${x-15+Math.random()*30}px;top:${y-30}px;font-size:${11+Math.random()*6}px;color:${Math.random()>0.5?'var(--cyan)':'var(--gold)'};`;
-  p.textContent = `+${S.tapPower}`;
-  document.body.appendChild(p);
-  setTimeout(()=>p.remove(), 700);
-  if(window.Telegram?.WebApp) Telegram.WebApp.HapticFeedback?.impactOccurred('light');
-  updateUI(); save();
+// ============ ACHIEVEMENTS ============
+function checkAchievements() {
+  let newUnlock=false;
+  ACHIEVEMENTS.forEach(a=>{
+    if(!S.achievements[a.id] && a.check(S)) {
+      S.achievements[a.id]=true;
+      newUnlock=true;
+      showToast(`🏅 Achievement: ${a.name}`);
+    }
+  });
+  if(newUnlock) save();
 }
 
-// ENERGY REGEN
-setInterval(()=>{ if(S.energy<S.maxEnergy){ S.energy=Math.min(S.maxEnergy,S.energy+1); updateUI(); } }, 1000);
+function renderAchievements() {
+  document.getElementById('achievementsGrid').innerHTML = ACHIEVEMENTS.map(a=>{
+    const unlocked=S.achievements[a.id];
+    return `<div class="ach-card ${unlocked?'unlocked':'locked'}">
+      <div class="ach-icon">${a.icon}</div>
+      <div class="ach-name">${a.name}</div>
+    </div>`;
+  }).join('');
+}
 
-// PASSIVE
-setInterval(()=>{ if(S.passive>0){ S.points+=S.passive; updateUI(); save(); } }, 1000);
+// ============ RANK SYSTEM UI ============
+function updateRankUI() {
+  const {rank,idx}=getRank(S.points);
+  const nextRank=RANKS[idx+1];
+  const xpPct = nextRank ? Math.min(100,((S.points-rank.min)/(nextRank.min-rank.min))*100) : 100;
+  const badgeHTML=`<span class="rank-badge ${rank.cls}">${rank.icon} ${rank.name}</span>`;
+  document.getElementById('rankBadge').className=`rank-badge ${rank.cls}`;
+  document.getElementById('rankBadge').textContent=`${rank.icon} ${rank.name}`;
+  document.getElementById('profileRankBadge').className=`rank-badge ${rank.cls}`;
+  document.getElementById('profileRankBadge').textContent=`${rank.icon} ${rank.name}`;
+  document.getElementById('xpFill').style.width=xpPct+'%';
+  document.getElementById('profileXpFill').style.width=xpPct+'%';
+  const xpText=nextRank?`${Math.floor(S.points-rank.min).toLocaleString()} / ${(nextRank.min-rank.min).toLocaleString()} XP`:'MAX RANK';
+  document.getElementById('xpDisp').textContent=xpText;
+  document.getElementById('profileXpText').textContent=xpText;
+  const lvl=Math.min(Math.floor(idx*10+Math.floor(xpPct/10))+1,99);
+  S.level=lvl;
+  document.getElementById('levelDisp').textContent=`LVL ${lvl}`;
+  document.getElementById('levelDisp2').textContent=`LVL ${lvl}`;
 
-// LEADERBOARD — from Supabase
-async function renderLB() {
-  let players = [];
-  try {
-    const { data } = await db.from('users').select('username,points').order('points',{ascending:false}).limit(20);
-    if(data) players = data;
-  } catch(e) {
-    players = [
-      {username:tgUser,points:Math.floor(S.points)},
-      {username:'PakMiner_01',points:284500},
-      {username:'CryptoHamza',points:231200},
-      {username:'BlockZain',points:198700},
-      {username:'SatoshiPK',points:167300},
-    ];
+  // Highlight current rank tier in profile
+  RANKS.forEach(r=>{
+    const el=document.getElementById('rt-'+r.name.toLowerCase().replace('grandmaster','grandmaster').replace(' ',''));
+    if(el) el.style.borderColor = r.name===rank.name ? 'rgba(0,255,224,0.4)' : '';
+  });
+}
+
+// ============ ENERGY UI ============
+function updateEnergyUI() {
+  document.getElementById('energyDisp').textContent=`${Math.floor(S.energy)}/${S.maxEnergy}`;
+  document.getElementById('energyFill').style.width=`${(S.energy/S.maxEnergy)*100}%`;
+}
+
+// ============ FULL UI UPDATE ============
+function updateUI() {
+  const pts=parseFloat(S.points.toFixed(2));
+  document.getElementById('balanceDisp').textContent=pts.toFixed(2);
+  document.getElementById('balanceDisp2').textContent=pts.toFixed(2);
+  document.getElementById('pkcEquiv').textContent=(pts/100000).toFixed(5);
+  document.getElementById('pkc-equiv').textContent=(pts/100000).toFixed(5);
+  updateEnergyUI();
+  document.getElementById('tapPwrDisp').textContent=`+${S.tapPower.toFixed(2)}`;
+  document.getElementById('tapsDisp').textContent=S.taps>=1000?(S.taps/1000).toFixed(1)+'K':S.taps;
+  document.getElementById('passiveDisp').textContent=S.passive>0?S.passive.toFixed(2)+'/s':'0/s';
+  document.getElementById('refDisp').textContent=S.refCount;
+  document.getElementById('refCountBig').textContent=S.refCount;
+  document.getElementById('refEarnedDisp').textContent=S.refEarned.toFixed(2);
+  document.getElementById('totalCommDisp').textContent=S.refEarned.toFixed(2)+' PTS';
+  document.getElementById('pTaps').textContent=S.taps>=1000?(S.taps/1000).toFixed(1)+'K':S.taps;
+  document.getElementById('pPoints').textContent=pts>=1000?(pts/1000).toFixed(2)+'K':pts.toFixed(2);
+  document.getElementById('pStreak').textContent=S.streak||0;
+  document.getElementById('pRefs').textContent=S.refCount;
+  document.getElementById('profileName').textContent=tgUser.toUpperCase();
+  document.getElementById('profileAvatar').textContent=(tgUser.replace('@','')||'P')[0].toUpperCase();
+
+  // Joined date
+  const jd=new Date(S.joinedDate||Date.now());
+  document.getElementById('profileSince').textContent='Joined '+jd.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+
+  updateRankUI();
+  renderUpgrades();
+  renderStreak();
+  renderAchievements();
+  updateBoostUI();
+
+  // Ref link
+  const refLink=`https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
+  document.getElementById('refLinkText').textContent=refLink;
+}
+
+// ============ REFERRAL FUNCTIONS ============
+function copyRefLink() {
+  const refLink=`https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
+  navigator.clipboard?.writeText(refLink).then(()=>showToast('📋 Link copied!')).catch(()=>{});
+  if(window.Telegram?.WebApp) Telegram.WebApp.HapticFeedback?.notificationOccurred('success');
+}
+
+function shareRefLink() {
+  const refLink=`https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
+  const text=`⛏️ PakChain Miner — Mine PKC coins daily!\n\n💎 Join with my link and get +50 PTS bonus:\n${refLink}\n\n🚀 Mainnet launch soon — mine as much as you can!`;
+  if(window.Telegram?.WebApp) {
+    Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(text)}`);
+  } else {
+    navigator.clipboard?.writeText(text);
+    showToast('📤 Text copied — paste in Telegram!');
   }
-  const rankCls = ['r1','r2','r3'];
-  document.getElementById('lbList').innerHTML = players.map((u,i)=>`
-    <div class="lb-card ${u.username===tgUser?'you':''}">
-      <div class="lb-rank ${rankCls[i]||'rn'}">#${i+1}</div>
-      <div class="lb-info">
-        <div class="lb-name">${u.username||'@miner'}${u.username===tgUser?' (You)':''}</div>
-        <div class="lb-pts">${(u.points||0).toLocaleString()} points</div>
-      </div>
-      <div class="lb-score">${((u.points||0)/1000).toFixed(1)} PKC</div>
-    </div>
-  `).join('');
 }
 
+// ============ LEADERBOARD ============
+async function renderLB() {
+  try {
+    const { data } = await db.from('users').select('username,points,streak').order('points',{ascending:false}).limit(50);
+    const players = data||[];
+    const rankCls=['r1','r2','r3'];
+    document.getElementById('lbList').innerHTML = players.length?players.map((u,i)=>{
+      const {rank}=getRank(u.points||0);
+      return `<div class="lb-card ${u.username===tgUser?'you':''}">
+        <div class="lb-rank ${rankCls[i]||'rn'}">#${i+1}</div>
+        <div class="lb-info">
+          <div class="lb-name">${u.username||'@miner'}${u.username===tgUser?' 👈':''}</div>
+          <div class="lb-pts">${rank.icon} ${rank.name} · ${(u.points||0).toFixed(2)} pts</div>
+        </div>
+        <div class="lb-score">${((u.points||0)/100000).toFixed(3)} PKC</div>
+      </div>`;
+    }).join(''):'<div style="text-align:center;padding:30px;font-size:10px;color:rgba(200,232,224,0.2);letter-spacing:2px;">NO MINERS YET</div>';
+  } catch(e) {
+    document.getElementById('lbList').innerHTML='<div style="text-align:center;padding:30px;font-size:10px;color:rgba(200,232,224,0.2);">LOADING...</div>';
+  }
+}
+
+// ============ REFERRAL LIST ============
+async function renderRefList() {
+  try {
+    const { data } = await db.from('users').select('username,points').eq('referred_by',userId).order('points',{ascending:false}).limit(20);
+    if(data&&data.length) {
+      document.getElementById('refList').innerHTML=data.map(u=>`
+        <div class="ref-item">
+          <div class="ref-item-icon">👤</div>
+          <div class="ref-item-info">
+            <div class="ref-item-name">${u.username||'@miner'}</div>
+            <div class="ref-item-pts">${(u.points||0).toFixed(2)} pts mined</div>
+          </div>
+          <div class="ref-item-earn">+${((u.points||0)*0.05).toFixed(2)} PTS</div>
+        </div>`).join('');
+    } else {
+      document.getElementById('refList').innerHTML='<div style="text-align:center;padding:20px;font-size:10px;color:rgba(200,232,224,0.2);letter-spacing:2px;">NO REFERRALS YET</div>';
+    }
+  } catch(e) {}
+}
+
+// ============ PAGE ROUTING ============
 function showPage(pg) {
-  ['mine','withdraw','lb'].forEach(p=>{
-    document.getElementById(p+'Page').classList.toggle('hidden',p!==pg);
-    document.getElementById('tab-'+p).classList.toggle('active',p===pg);
+  const pages=['mine','ref','profile','withdraw','lb'];
+  pages.forEach(p=>{
+    const el=document.getElementById(p+'Page');
+    if(el) el.classList.toggle('hidden',p!==pg);
+    const tab=document.getElementById('tab-'+p);
+    if(tab) tab.classList.toggle('active',p===pg);
   });
   if(pg==='lb') renderLB();
+  if(pg==='ref') renderRefList();
+  if(pg==='profile') renderAchievements();
 }
 
-// Init
+// ============ TOAST ============
+let toastTimeout=null;
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ============ INIT ============
 loadFromDB();
 updateUI();
 </script>
